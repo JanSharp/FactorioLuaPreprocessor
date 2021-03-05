@@ -14,7 +14,6 @@ local function preprocess_mod(mod_dir)
     if path.trim_last_part(source_path) ~= args.target_dir
       and args.source_extensions[path.get_extension(source_path)]
     then
-      print("  "..source_path)
       local source_file = io.open(source_path, "r")
       local source_code = source_file:read("a")
       source_file:close()
@@ -34,7 +33,6 @@ local function preprocess_mod(mod_dir)
       end
 
       if write_file then
-        print("  "..target_path)
         target_file = io.open(target_path, "w")
         target_file:write(target_code)
         target_file:close()
