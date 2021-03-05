@@ -12,6 +12,7 @@
         "--source-extensions", ".lua",
         "--target-dir", "C:/Dev/LuaPreprocessor/mod",
         "--target-extension", ".lua",
+        "--auto-clean-up-target-dir",
       ],
     },
   ]

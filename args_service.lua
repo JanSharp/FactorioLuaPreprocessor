@@ -2,7 +2,7 @@
 local args_util = require("args_util")
 
 ---@param arg string[]
----@return table<string, string|string[]>
+---@return table<string, boolean|string|string[]>
 local function get_args(arg)
   local args = args_util.parse_args(arg)
 
@@ -44,6 +44,19 @@ local function get_args(arg)
     args[group_name] = args[group_name][1]
   end
 
+  ---@param group_name string
+  local function flag(group_name)
+    if args[group_name] then
+      assert(#args[group_name] == 0, "Program args group '--"
+        ..get_original_group_name(group_name)
+        .."' must contain 0 subsequent values. It's a flag."
+      )
+      args[group_name] = true
+    else
+      args[group_name] = false
+    end
+  end
+
   rename_groups()
 
   assert_group("source_extensions")
@@ -56,6 +69,8 @@ local function get_args(arg)
   single("source_dir")
   single("target_extension")
   single("target_dir")
+
+  flag("auto_clean_up_target_dir")
 
   return args
 end
