@@ -8,4 +8,5 @@
   "Lua.diagnostics.neededFileStatus": {
     "no-implicit-any": "Any",
   },
+  "lua-local.interpreter": "lua54",
 }
