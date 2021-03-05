@@ -11,7 +11,9 @@ local args = args_service.get_args(arg)
 ---@param mod_dir string
 local function preprocess_mod(mod_dir)
   for _, source_path in ipairs(dir.get_files_deep(mod_dir)) do
-    if args.source_extensions[path.get_extension(source_path)] then
+    if path.trim_last_part(source_path) ~= args.target_dir
+      and args.source_extensions[path.get_extension(source_path)]
+    then
       print("  "..source_path)
       local source_file = io.open(source_path, "r")
       local source_code = source_file:read("a")
@@ -20,7 +22,7 @@ local function preprocess_mod(mod_dir)
       local target_code = preprocess_in_memory(source_code)
 
       local target_path = path.combine(
-        path.trim_last_part(source_path),
+        args.target_dir,
         path.get_filename(source_path)..args.target_extension
       )
 
