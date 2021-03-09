@@ -1,43 +1,122 @@
 
----combine all path parts using / (slashes)
----@vararg string[]
----@return string
-local function combine(...)
-  return table.concat({...}, "/")
+---@class Path
+---@field entries string[]
+local Path = {}
+Path.__index = Path
+
+local entry_name_pattern = "[^/]+"
+
+---Path constructor
+---@param path? string|Path
+---@return Path
+function Path.new(path)
+  if type(path) == "table" then
+    return path:copy()
+  end
+  local entries = {}
+  if path then
+    for entry_name in path:gmatch(entry_name_pattern) do
+      entries[#entries+1] = entry_name
+    end
+  end
+  return setmetatable({entries = entries}, Path)
+end
+Path.__call = Path.new
+
+---copy this path
+---@return Path
+function Path:copy()
+  local entries = {}
+  for _, entry_name in ipairs(self.entries) do
+    entries[#entries+1] = entry_name
+  end
+  return setmetatable({entries = entries}, Path)
 end
 
----get the last part of the path which can be the filename or the last directory
----@param path string
 ---@return string
-local function get_last_part(path)
-  return string.match(path, "/([^/]*)$") or path
+function Path:str()
+  return table.concat(self.entries, "/")
 end
+Path.__tostring = Path.str
 
----trims the last part of the path which can be a filename or a directory
----@param path string
----@return string
-local function trim_last_part(path)
-  return string.match(path, "(.-)/?[^/]*$")
+function Path:length()
+  return #self.entries
 end
+Path.__len = Path.length
+
+function Path:equals(other)
+  local count = #self.entries
+  if count ~= #other.entries then
+    return false
+  end
+  for i = 1, count do
+    if self.entries[i] ~= other.entries[i] then
+      return false
+    end
+  end
+  return true
+end
+Path.__eq = Path.equals
+
+---create a new path which is all given paths combined
+---@vararg Path|string
+---@return Path
+function Path.combine(...)
+  local result = Path.new()
+  local entries = result.entries
+  for _, path in ipairs{...} do
+    if type(path) == "string" then
+      for entry_name in path:gmatch(entry_name_pattern) do
+        entries[#entries+1] = entry_name
+      end
+    else
+      for _, entry_name in ipairs(path.entries) do
+        entries[#entries+1] = entry_name
+      end
+    end
+  end
+  return result
+end
+Path.__div = Path.combine
 
 ---get the extension of the path
----@param path string
 ---@return string
-local function get_extension(path)
-  return string.match(get_last_part(path), "(%.[^.]*)$") or ""
+function Path:extension()
+  return string.match(self.entries[#self.entries], "(%.[^.]*)$") or ""
 end
 
 ---get the filename of the path
----@param path string
 ---@return string
-local function get_filename(path)
-  return string.match(get_last_part(path), "(.-)%.?[^.]*$")
+function Path:filename()
+  return string.match(self.entries[#self.entries], "(.-)%.?[^.]*$")
 end
 
-return {
-  combine = combine,
-  trim_last_part = trim_last_part,
-  get_last_part = get_last_part,
-  get_extension = get_extension,
-  get_filename = get_filename,
-}
+---Extract a part of the path as a new path.
+---Works just like string.sub where each entry_name is like a character
+---@param i integer
+---@param j? integer
+---@return Path
+function Path:sub(i, j)
+  do
+    local count = #self.entries
+    if i < 0 then
+      i = count + 1 + i
+    end
+    i = math.max(i, 1)
+    if j then
+      if j < 0 then
+        j = count + 1 + j
+      end
+      j = math.min(j, count)
+    else
+      j = count
+    end
+  end
+  local result = Path.new()
+  for k = i, j do
+    result.entries[#result.entries+1] = self.entries[k]
+  end
+  return result
+end
+
+return Path

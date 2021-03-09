@@ -1,8 +1,16 @@
 
 local args_util = require("args_util")
+local Path = require("path")
+
+---@class Args
+---@field source_extensions table<string, boolean>
+---@field source_dir_path Path
+---@field target_extension string
+---@field target_dir_path Path
+---@field auto_clean_up_target_dir boolean
 
 ---@param arg string[]
----@return table<string, boolean|string|string[]>
+---@return Args
 local function get_args(arg)
   local args = args_util.parse_args(arg)
 
@@ -69,6 +77,11 @@ local function get_args(arg)
   single("source_dir")
   single("target_extension")
   single("target_dir")
+
+  args.source_dir_path = Path.new(args.source_dir)
+  args.source_dir = nil
+  args.target_dir_path = Path.new(args.target_dir)
+  args.target_dir = nil
 
   flag("auto_clean_up_target_dir")
 
