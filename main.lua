@@ -4,6 +4,8 @@ local preprocess_in_memory = preprocessor.preprocess_in_memory
 local args_service = require("args_service")
 require("path")
 local dir = require("dir")
+---@type LFS
+local lfs = require("lfs")
 
 local args = args_service.get_args(arg)
 
@@ -23,6 +25,10 @@ local function preprocess_mod(mod_dir_path)
       local sub_dir = source_path:sub(#args.source_dir_path + 1, -2)
       local target_dir_path = args.target_dir_path / sub_dir
       local target_path = target_dir_path / (source_path:filename()..args.target_extension)
+
+      if lfs.attributes(target_dir_path:str(), "mode") ~= "directory" then
+        lfs.mkdir(target_dir_path:str())
+      end
 
       local write_file = true
       local target_file = io.open(target_path:str(), "r")
