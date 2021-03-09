@@ -14,6 +14,22 @@ local LFSDirObject = {
 
 ---@class LFSLinkObject
 
+---@class LFSAttributes
+---@field dev number @ on Unix systems, this represents the device that the inode resides on. On Windows systems, represents the drive number of the disk containing the file
+---@field ino number @ on Unix systems, this represents the inode number. On Windows systems this has no meaning
+---@field mode "file"|"directory"|"link"|"socket"|"named pipe"|"char device"|"block device"|"other" @ string representing the associated protection mode (the values could be file, directory, link, socket, named pipe, char device, block device or other)
+---@field nlink number @ number of hard links to the file
+---@field uid number @ user-id of owner (Unix only, always 0 on Windows)
+---@field gid number @ group-id of owner (Unix only, always 0 on Windows)
+---@field rdev number @ on Unix systems, represents the device type, for special file inodes. On Windows systems represents the same as dev
+---@field access number @ time of last access
+---@field modification number @ time of last data modification
+---@field change number @ time of last file status change
+---@field size number @ file size, in bytes
+---@field permissions string @ file permissions string
+---@field blocks number @ block allocated for file; (Unix only)
+---@field blksize number @ optimal file system I/O blocksize; (Unix only)
+
 ---@class LFS
 local LFS = {
   ---Returns a table with the file attributes corresponding to filepath (or nil followed by an error message and a system-dependent error code in case of error). If the second optional argument is given and is a string, then only the value of the named attribute is returned (this use is equivalent to lfs.attributes(filepath)[request_name], but the table is not created and only one attribute is retrieved from the O.S.). if a table is passed as the second argument, it (result_table) is filled with attributes and returned instead of a new table. The attributes are described as follows; attribute mode is a string, all the others are numbers, and the time related attributes use the same time reference of os.time:
@@ -48,7 +64,7 @@ local LFS = {
   ---This function uses stat internally thus if the given filepath is a symbolic link, it is followed (if it points to another link the chain is followed recursively) and the information is about the file it refers to. To obtain information about the link itself, see function lfs.symlinkattributes.
   ---@param filepath string
   ---@param request_name_or_result_table string|table
-  ---@return string|table|nil
+  ---@return string|LFSAttributes|nil
   ---@return string|nil @ error message
   attributes = function(filepath, request_name_or_result_table)
   end,
