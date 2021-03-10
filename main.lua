@@ -9,7 +9,7 @@ local lfs = require("lfs")
 
 local args = args_service.get_args(arg)
 
----preprocesses all .luapp files in the given dir
+---preprocesses files in the given dir
 ---@param mod_dir_path Path
 local function preprocess_mod(mod_dir_path)
   for _, source_path in ipairs(dir.get_files_deep(mod_dir_path)) do
