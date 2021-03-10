@@ -1,4 +1,7 @@
 
+---@type LFS
+local lfs = require("lfs")
+
 ---@class Path
 ---@field entries string[]
 local Path = {}
@@ -117,6 +120,17 @@ function Path:sub(i, j)
     result.entries[#result.entries+1] = self.entries[k]
   end
   return result
+end
+
+function Path:exists()
+  return lfs.attributes(self:str(), "dev") ~= nil
+end
+
+---calls lfs.attributes(request_name) and returns the result
+---@param request_name string
+---@return string|number|LFSAttributes|nil
+function Path:attr(request_name)
+  return lfs.attributes(self:str(), request_name)
 end
 
 return Path

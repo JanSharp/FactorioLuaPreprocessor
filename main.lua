@@ -2,48 +2,102 @@
 local preprocessor = require("preprocessor")
 local preprocess_in_memory = preprocessor.preprocess_in_memory
 local args_service = require("args_service")
-require("path")
-local dir = require("dir")
+local Path = require("path")
 ---@type LFS
 local lfs = require("lfs")
 
 local args = args_service.get_args(arg)
 
----preprocesses files in the given dir
----@param mod_dir_path Path
-local function preprocess_mod(mod_dir_path)
-  for _, source_path in ipairs(dir.get_files_deep(mod_dir_path)) do
-    if source_path:sub(1, -2) ~= args.target_dir_path
-      and args.source_extensions[source_path:extension()]
-    then
-      local source_file = io.open(source_path:str(), "r")
-      local source_code = source_file:read("a")
-      source_file:close()
+---does the directory contain anything
+---@param dir string
+---@return boolean
+local function dir_contains_anything(dir)
+  ---@type string
+  for entry_name in lfs.dir(dir) do
+    if entry_name ~= "." and entry_name ~= ".." then
+      return true
+    end
+  end
+  return false
+end
 
-      local target_code = preprocess_in_memory(source_code)
+--TODO: make this code more maintainable... somehow
 
-      local sub_dir = source_path:sub(#args.source_dir_path + 1, -2)
-      local target_dir_path = args.target_dir_path / sub_dir
-      local target_path = target_dir_path / (source_path:filename()..args.target_extension)
+local target_dir_paths = {}
+local target_file_paths = {}
 
-      if lfs.attributes(target_dir_path:str(), "mode") ~= "directory" then
-        lfs.mkdir(target_dir_path:str())
-      end
-
-      local write_file = true
-      local target_file = io.open(target_path:str(), "r")
-      if target_file then
-        write_file = target_file:read("a") ~= target_code
-        target_file:close()
-      end
-
-      if write_file then
-        target_file = io.open(target_path:str(), "w")
-        target_file:write(target_code)
-        target_file:close()
+local function process_source_dir(relative_path)
+  ---@type string
+  for entry_name in lfs.dir((args.source_dir_path / relative_path):str()) do
+    if entry_name ~= "." and entry_name ~= ".." then
+      local entry_path = Path.new(entry_name)
+      local source_path = args.source_dir_path / relative_path / entry_path
+      if source_path:attr("mode") == "directory" then
+        if source_path ~= args.target_dir_path then
+          target_dir_paths[(relative_path / entry_path):str()] = true
+          process_source_dir(relative_path / entry_path)
+        end
+      else
+        if args.source_extensions[source_path:extension()] then
+          ---@type Path
+          local relative_target_path = (relative_path / (entry_path:filename()..args.target_extension))
+          target_file_paths[relative_target_path:str()] = true
+          local source_file = io.open(source_path:str(), "r")
+          local source_code = source_file:read("a")
+          source_file:close()
+          local target_code = preprocess_in_memory(source_code)
+          local target_path = args.target_dir_path / relative_target_path
+          local write_file = true
+          local target_file = io.open(target_path:str(), "r")
+          if target_file then
+            write_file = target_file:read("a") ~= target_code
+            target_file:close()
+          end
+          if write_file then
+            if not target_path:sub(1, -2):exists() then
+              lfs.mkdir(target_path:sub(1, -2):str())
+            end
+            target_file = io.open(target_path:str(), "w")
+            target_file:write(target_code)
+            target_file:close()
+          end
+        end
       end
     end
   end
 end
 
-preprocess_mod(args.source_dir_path)
+local function process_target_dir(relative_path)
+  ---@type string
+  for entry_name in lfs.dir((args.target_dir_path / relative_path):str()) do
+    if entry_name ~= "." and entry_name ~= ".." then
+      local entry_path = Path.new(entry_name)
+      local target_path = args.target_dir_path / relative_path / entry_path
+      if target_path:attr("mode") == "directory" then
+        if target_path ~= args.source_dir_path then
+          if target_dir_paths[(relative_path / entry_path):str()] then
+            process_target_dir(relative_path / entry_path)
+          else
+            process_target_dir(relative_path / entry_path)
+            if not dir_contains_anything(target_path:str()) then
+              lfs.rmdir(target_path:str())
+            end
+          end
+        end
+      else
+        if args.source_extensions[target_path:extension()] then
+          ---@type Path
+          local relative_target_path = (relative_path / (entry_path:filename()..args.target_extension))
+          if not target_file_paths[relative_target_path:str()] then
+            os.remove((args.target_dir_path / relative_target_path):str())
+          end
+        end
+      end
+    end
+  end
+end
+
+process_source_dir(Path.new())
+if args.auto_clean_up_target_dir then
+  process_target_dir(Path.new())
+end

@@ -64,7 +64,7 @@ local LFS = {
   ---This function uses stat internally thus if the given filepath is a symbolic link, it is followed (if it points to another link the chain is followed recursively) and the information is about the file it refers to. To obtain information about the link itself, see function lfs.symlinkattributes.
   ---@param filepath string
   ---@param request_name_or_result_table string|table
-  ---@return string|LFSAttributes|nil
+  ---@return string|number|LFSAttributes|nil
   ---@return string|nil @ error message
   attributes = function(filepath, request_name_or_result_table)
   end,
