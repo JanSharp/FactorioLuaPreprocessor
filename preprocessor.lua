@@ -1,4 +1,11 @@
 
+---comment
+---@param chunk string
+---@return string
+local function trim_type_constructors(chunk)
+  return chunk:gsub("new%s+[^%s({})]+", "")
+end
+
 ---@param pieces string[]
 ---@param chunk string
 local function parse_dollar_paren(pieces, chunk)
@@ -39,6 +46,7 @@ end
 ---@param name? string
 ---@return function(string: _put) return string
 local function preprocess(chunk, name)
+  chunk = trim_type_constructors(chunk)
   return assert(load(parse_hash_lines(chunk), name))()
 end
 
