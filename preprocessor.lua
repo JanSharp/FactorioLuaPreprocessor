@@ -1,5 +1,29 @@
 
----comment
+---support function notations similar to C# lambda expressions
+---() => (true) -- the expression has to be in parethesis
+---e => (e.field)
+---(one, two) => {
+---  print("one: "..one..", two: "..two..";")
+---  return one + two
+---}
+---@param chunk string
+---@return string
+local function preprocess_lambda_expressions(chunk)
+  chunk = chunk:gsub("([a-zA-Z_][a-zA-Z0-9_]*)%s*=>%s*(%b())", function(param, body)
+    return " function("..param..") return "..body:sub(2, -2)..";end "
+  end)
+  chunk = chunk:gsub("([a-zA-Z_][a-zA-Z0-9_]*)%s*=>%s*(%b{})", function(param, body)
+    return " function("..param..")"..body:sub(2, -2)..";end "
+  end)
+  chunk = chunk:gsub("(%([^())]*%))%s*=>%s*(%b())", function(params, body)
+    return " function"..params.." return "..body:sub(2, -2)..";end "
+  end)
+  chunk = chunk:gsub("(%([^())]*%))%s*=>%s*(%b{})", function(params, body)
+    return " function"..params..body:sub(2, -2)..";end "
+  end)
+  return chunk
+end
+
 ---@param chunk string
 ---@return string
 local function trim_type_constructors(chunk)
@@ -46,6 +70,7 @@ end
 ---@param name? string
 ---@return function(string: _put) return string
 local function preprocess(chunk, name)
+  chunk = preprocess_lambda_expressions(chunk)
   chunk = trim_type_constructors(chunk)
   return assert(load(parse_hash_lines(chunk), name))()
 end
