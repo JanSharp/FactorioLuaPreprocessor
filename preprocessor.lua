@@ -27,7 +27,10 @@ end
 ---@param chunk string
 ---@return string
 local function trim_type_constructors(chunk)
-  return chunk:gsub("new%s+[^%s({})]+", "")
+  ---@param m string
+  return chunk:gsub("new%s+[^%s({}),]+%s*([({])", function(m)
+    return m
+  end)
 end
 
 ---@param pieces string[]
