@@ -1,3 +1,4 @@
+--##
 
 ---@class LFSDirObject
 local LFSDirObject = {
