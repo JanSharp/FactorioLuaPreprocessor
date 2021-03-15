@@ -10,16 +10,16 @@
 ---@return string
 local function preprocess_lambda_expressions(chunk)
   chunk = chunk:gsub("([a-zA-Z_][a-zA-Z0-9_]*)%s*=>%s*(%b())", function(param, body)
-    return " function("..param..") return "..body:sub(2, -2)..";end "
+    return " function("..param..") return "..body:sub(2, -2)..";end\n"
   end)
   chunk = chunk:gsub("([a-zA-Z_][a-zA-Z0-9_]*)%s*=>%s*(%b{})", function(param, body)
-    return " function("..param..")"..body:sub(2, -2)..";end "
+    return " function("..param..")"..body:sub(2, -2)..";end\n"
   end)
   chunk = chunk:gsub("(%([^())]*%))%s*=>%s*(%b())", function(params, body)
-    return " function"..params.." return "..body:sub(2, -2)..";end "
+    return " function"..params.." return "..body:sub(2, -2)..";end\n"
   end)
   chunk = chunk:gsub("(%([^())]*%))%s*=>%s*(%b{})", function(params, body)
-    return " function"..params..body:sub(2, -2)..";end "
+    return " function"..params..body:sub(2, -2)..";end\n"
   end)
   return chunk
 end
