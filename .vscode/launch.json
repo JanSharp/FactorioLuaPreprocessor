@@ -8,6 +8,7 @@
         "file": "main.lua",
       },
       "args": [
+        "--project-name", "LuaPreprocessor",
         "--source-dir", "C:/Dev/LuaPreprocessor/mod/src",
         "--source-extensions", ".lua",
         "--target-dir", "C:/Dev/LuaPreprocessor/mod",
