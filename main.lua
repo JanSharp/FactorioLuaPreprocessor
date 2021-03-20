@@ -9,10 +9,14 @@ local lfs = require("lfs")
 local args = args_service.get_args(arg)
 
 -- setup preprocessor global
+---@class PreprocessorGlobal
+---@field args Args
+---@field file_path Path
 local global = {
   args = args,
 }
-_ENV.preprocessor = global
+-- the debugger breaks using _ENV, possibly only for the main file, but still
+_G.preprocessor = global
 
 ---does the directory contain anything
 ---@param dir string
@@ -37,6 +41,7 @@ local function process_source_dir(relative_path)
   for entry_name in lfs.dir((args.source_dir_path / relative_path):str()) do
     if entry_name ~= "." and entry_name ~= ".." then
       local entry_path = Path.new(entry_name)
+      ---@type Path
       local source_path = args.source_dir_path / relative_path / entry_path
       if source_path:attr("mode") == "directory" then
         if source_path ~= args.target_dir_path then
