@@ -8,6 +8,12 @@ local lfs = require("lfs")
 
 local args = args_service.get_args(arg)
 
+-- setup preprocessor global
+local global = {
+  args = args,
+}
+_ENV.preprocessor = global
+
 ---does the directory contain anything
 ---@param dir string
 ---@return boolean
@@ -45,6 +51,7 @@ local function process_source_dir(relative_path)
           local source_file = io.open(source_path:str(), "r")
           local source_code = source_file:read("a")
           source_file:close()
+          global.file_path = source_path
           local target_code = preprocess_in_memory(source_code)
           local target_path = args.target_dir_path / relative_target_path
           local write_file = true
