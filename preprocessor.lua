@@ -1,4 +1,35 @@
 
+---@param chunk string
+---@return string
+local function preprocess_pragma_once(chunk)
+  local preprocessor = preprocessor
+  ---@typelist number, string, number
+  local s, f = chunk:match("()#pragma once%s*return()")
+  if s then
+    local runtime_global = "__"..preprocessor.args.project_id.."__preprocessor"
+    local relative_path = preprocessor.file_path:sub(#preprocessor.args.source_dir_path + 1)
+    local module_expression = runtime_global..".modules[\""..relative_path:str().."\"]"
+    chunk = ([[
+
+if not %s then
+  if __DebugAdapter then
+    __DebugAdapter.defineGlobal("%s")
+  end
+  %s = {modules = {}}
+end
+if %s then
+  return %s
+end
+]]):format(runtime_global, runtime_global, runtime_global,
+        module_expression, module_expression)
+      ..chunk:sub(1, s - 1)
+      ..module_expression.." ="
+      ..chunk:sub(f)
+      .."\nreturn "..module_expression.."\n"
+  end
+  return chunk
+end
+
 ---support function notations similar to C# lambda expressions
 ---() => (true) -- the expression has to be in parethesis
 ---e => (e.field)
@@ -73,6 +104,7 @@ end
 ---@param name? string
 ---@return function(string: _put) return string
 local function preprocess(chunk, name)
+  chunk = preprocess_pragma_once(chunk)
   chunk = preprocess_lambda_expressions(chunk)
   chunk = trim_type_constructors(chunk)
   return assert(load(parse_hash_lines(chunk), name))()
