@@ -3,29 +3,46 @@
 ---@return string
 local function preprocess_pragma_once(chunk)
   local preprocessor = preprocessor
-  ---@typelist number, string, number
-  local s, f = chunk:match("()#pragma once%s*return()")
+  ---@type number
+  local s, f = chunk:match("()#pragma once()")
   if s then
-    local runtime_global = "__"..preprocessor.args.project_id.."__preprocessor"
+    local runtime_global = "__"..preprocessor.args.project_id.."__preprocessor_runtime_data"
     local relative_path = preprocessor.file_path:sub(#preprocessor.args.source_dir_path + 1)
     local module_expression = runtime_global..".modules[\""..relative_path:str().."\"]"
     chunk = ([[
-
-if not %s then
-  if __DebugAdapter then
-    __DebugAdapter.defineGlobal("%s")
+%s
+do
+  local modules
+  local preprocessor_global = %s
+  if preprocessor_global then
+    modules = preprocessor_global.modules
+  else
+    if __DebugAdapter then
+      __DebugAdapter.defineGlobal("%s")
+    end
+    modules = {}
+    %s = {modules = modules}
   end
-  %s = {modules = {}}
+  local cached_result = modules["%s"]
+  if cached_result ~= nil then
+    return cached_result
+  end
 end
-if %s then
-  return %s
+local main_chunk = function(...)
+%s
 end
-]]):format(runtime_global, runtime_global, runtime_global,
-        module_expression, module_expression)
-      ..chunk:sub(1, s - 1)
-      ..module_expression.." ="
-      ..chunk:sub(f)
-      .."\nreturn "..module_expression.."\n"
+local result = main_chunk(...)
+if result == nil then
+  result = true
+end
+%s = result
+return result
+]])
+      :format(chunk:sub(1, s - 1),
+        runtime_global, runtime_global, runtime_global,
+        relative_path:str(),
+        chunk:sub(f),
+        module_expression)
   end
   return chunk
 end
