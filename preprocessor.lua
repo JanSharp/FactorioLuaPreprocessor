@@ -12,20 +12,17 @@ local function preprocess_pragma_once(chunk)
     chunk = ([[
 %s
 do
-  local modules
-  local preprocessor_global = %s
-  if preprocessor_global then
-    modules = preprocessor_global.modules
+  local data = %s
+  if data then
+    local cached_result = data.modules["%s"]
+    if cached_result ~= nil then
+      return cached_result
+    end
   else
     if __DebugAdapter then
       __DebugAdapter.defineGlobal("%s")
     end
-    modules = {}
-    %s = {modules = modules}
-  end
-  local cached_result = modules["%s"]
-  if cached_result ~= nil then
-    return cached_result
+    %s = {modules = {}}
   end
 end
 local main_chunk = function(...)
@@ -39,8 +36,7 @@ end
 return result
 ]])
       :format(chunk:sub(1, s - 1),
-        runtime_global, runtime_global, runtime_global,
-        relative_path:str(),
+        runtime_global, relative_path:str(), runtime_global, runtime_global,
         chunk:sub(f),
         module_expression)
   end
