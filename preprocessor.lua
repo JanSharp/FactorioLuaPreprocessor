@@ -7,7 +7,7 @@ local function preprocess_pragma_once(chunk)
   local s, f = chunk:match("()#pragma once()")
   if s then
     local runtime_global = "__"..preprocessor.args.project_id.."__preprocessor_runtime_data"
-    local relative_path = preprocessor.file_path:sub(#preprocessor.args.source_dir_path + 1)
+    local relative_path = preprocessor.current_file_path:sub(#preprocessor.args.source_dir_path + 1)
     local module_expression = runtime_global..".modules[\""..relative_path:str().."\"]"
     chunk = ([[
 %s

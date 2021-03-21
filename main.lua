@@ -11,7 +11,7 @@ local args = args_service.get_args(arg)
 -- setup preprocessor global
 ---@class PreprocessorGlobal
 ---@field args Args
----@field file_path Path
+---@field current_file_path Path
 local global = {
   args = args,
 }
@@ -56,7 +56,7 @@ local function process_source_dir(relative_path)
           local source_file = io.open(source_path:str(), "r")
           local source_code = source_file:read("a")
           source_file:close()
-          global.file_path = source_path
+          global.current_file_path = source_path
           local target_code = preprocess_in_memory(source_code)
           local target_path = args.target_dir_path / relative_target_path
           local write_file = true
