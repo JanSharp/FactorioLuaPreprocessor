@@ -77,6 +77,84 @@ local function trim_type_constructors(chunk)
   end)
 end
 
+---@param chunk string
+---@return string
+local function interpolate_strings(chunk)
+  local last_finish = 0
+  local result = {}
+  ---@typelist string, number
+  for opener, start in chunk:gmatch("$([\"'%[])()") do
+    if start > last_finish then
+
+      local closer
+      result[#result+1] = chunk:sub(last_finish, start - 3)
+      if opener == "[" then
+        local eq_chain = chunk:match("^(=*)%[", start)
+        if not eq_chain then
+          last_finish = start - 2
+          goto continue
+        end
+        start = start + eq_chain:len() + 1
+        opener = "["..eq_chain.."["
+        closer = "]"..eq_chain.."]"
+        ---@typelist string, number
+        last_finish = chunk:match("%]"..eq_chain.."%]()", start)
+      else
+        closer = opener
+        ---@typelist string, string, string, number
+        for backslashes, finish in chunk:gmatch("(\\*)"..opener.."()", start) do
+          last_finish = finish
+          if (backslashes:len() % 2) == 0 then
+            break
+          end
+        end
+      end
+
+      result[#result+1] = opener
+      local interpolation_start_index = #result + 1
+      local last_pos_in_str = start
+      ---@typelist string, number
+      for curly, current_pos in chunk:gmatch("({+)()", start) do
+        if current_pos > last_finish then
+          break
+        end
+        if current_pos > last_pos_in_str then
+          if (curly:len() % 2) == 1 then
+            result[#result+1] = chunk:sub(last_pos_in_str, current_pos - 2)
+            result[#result+1] = closer
+            result[#result+1] = "..("
+            local closing_curly, interpolation_finish = nil, current_pos
+            repeat
+              ---@typelist string, number
+              closing_curly, interpolation_finish = chunk:match("(}+)()", interpolation_finish)
+            until (closing_curly:len() % 2) == 1 or interpolation_finish > last_finish
+            if interpolation_finish > last_finish then
+              -- a { without it's closing }!
+              -- this is invalid, but it will get silently ignored
+              -- it basically just removes the $ and leaves the string as is
+              for i = interpolation_start_index, #result do
+                result[i] = nil
+              end
+              break
+            end
+            result[#result+1] = chunk:sub(current_pos, interpolation_finish - 2)
+            result[#result+1] = ").."
+            result[#result+1] = opener
+            last_pos_in_str = interpolation_finish
+          end
+        end
+      end
+      result[#result+1] = chunk:sub(last_pos_in_str, last_finish - closer:len() - 1)
+      result[#result+1] = closer
+      -- TODO: detect and remove concats of empty strings because that's a waste
+      -- but man that's a poin
+    end
+    ::continue::
+  end
+  result[#result+1] = chunk:sub(last_finish)
+  return table.concat(result)
+end
+
 ---@param pieces string[]
 ---@param chunk string
 local function parse_dollar_paren(pieces, chunk)
@@ -120,6 +198,7 @@ local function preprocess(chunk, name)
   chunk = preprocess_pragma_once(chunk)
   chunk = preprocess_lambda_expressions(chunk)
   chunk = trim_type_constructors(chunk)
+  chunk = interpolate_strings(chunk)
   return assert(load(parse_hash_lines(chunk), name))()
 end
 
