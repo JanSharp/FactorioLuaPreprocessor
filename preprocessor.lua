@@ -97,11 +97,11 @@ local function interpolate_strings(chunk)
         start = start + eq_chain:len() + 1
         opener = "["..eq_chain.."["
         closer = "]"..eq_chain.."]"
-        ---@typelist string, number
+        ---@type number
         last_finish = chunk:match("%]"..eq_chain.."%]()", start)
       else
         closer = opener
-        ---@typelist string, string, string, number
+        ---@typelist string, number
         for backslashes, finish in chunk:gmatch("(\\*)"..opener.."()", start) do
           last_finish = finish
           if (backslashes:len() % 2) == 0 then
