@@ -2,9 +2,17 @@
 ---@param chunk string
 ---@return string
 local function ignored_by_language_server(chunk)
-  return chunk:gsub("%$%?(%b())", function(match)
+  -- p stands for "only preprocessor"
+  return chunk:gsub("%$p(%b())", function(match)
     return match:sub(2, -2)
   end)
+end
+
+---@param chunk string
+---@return string
+local function ignored_by_preprocessor(chunk)
+  -- l stands for "only language server"
+  return chunk:gsub("%$l(%b())", "")
 end
 
 ---@param chunk string
@@ -126,6 +134,7 @@ end
 ---@return function(string: _put) return string
 local function preprocess(chunk, name)
   chunk = ignored_by_language_server(chunk)
+  chunk = ignored_by_preprocessor(chunk)
   chunk = preprocess_pragma_once(chunk)
   chunk = preprocess_lambda_expressions(chunk)
   chunk = trim_type_constructors(chunk)
