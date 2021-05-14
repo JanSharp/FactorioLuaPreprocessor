@@ -113,10 +113,10 @@ local function parse_hash_lines(chunk)
   local s = 1
   while true do
     ---@typelist integer, integer, string
-    local ss, e, lua = string.find(chunk, "^#+([^\n]*\n?)", s)
+    local ss, e, lua = string.find(chunk, "^%s*#+([^\n]*\n?)", s)
     if not e then
       ---@typelist integer, integer, string
-      ss, e, lua = string.find(chunk, "\n#+([^\n]*\n?)", s)
+      ss, e, lua = string.find(chunk, "\n%s*#+([^\n]*\n?)", s)
       table.insert(pieces, "_put(")
       parse_dollar_paren(pieces, string.sub(chunk, s, ss))
       table.insert(pieces, ")")
