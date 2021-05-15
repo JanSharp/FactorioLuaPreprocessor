@@ -97,9 +97,8 @@ local function process_target_dir(relative_path)
           end
         end
       else
-        if args.source_extensions[target_path:extension()] then
-          ---@type Path
-          local relative_target_path = (relative_path / (entry_path:filename()..args.target_extension))
+        if target_path:extension() == args.target_extension then
+          local relative_target_path = relative_path / entry_path ---@type Path
           if not target_file_paths[relative_target_path:str()] then
             os.remove((args.target_dir_path / relative_target_path):str())
           end
