@@ -10,6 +10,7 @@ local Path = require("path")
 ---@field target_extension string
 ---@field target_dir_path Path
 ---@field auto_clean_up_target_dir boolean
+---@field ignore_dirs table<string, boolean>
 
 ---@param arg string[]
 ---@return Args
@@ -76,6 +77,8 @@ local function get_args(arg)
   assert_group("target_dir")
 
   convert_to_map("source_extensions")
+  args.ignore_dirs = args.ignore_dirs or {}
+  convert_to_map("ignore_dirs")
 
   single("project_name")
   single("source_dir")

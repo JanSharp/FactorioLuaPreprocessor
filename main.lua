@@ -80,6 +80,7 @@ local function process_source_dir(relative_path)
 end
 
 local function process_target_dir(relative_path)
+  if args.ignore_dirs[relative_path:str()] then return end -- TODO: think about this feature more and possibly also use it for the source dir
   ---@type string
   for entry_name in lfs.dir((args.target_dir_path / relative_path):str()) do
     if entry_name ~= "." and entry_name ~= ".." then
