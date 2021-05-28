@@ -10,21 +10,6 @@ local function to_lua_string(str)
   return "["..eq_chain.."["..str.."]"..eq_chain.."]"
 end
 
----`$s(foo)` gets turned into `"foo"`. Meant for "macro" parameters, but might be useful otherwise as well\
----`e` stands for `expression` or `escape`
----@param chunk string
----@return string
-local function expression_as_string(chunk)
-  return chunk:gsub("$e(%b())", function(m) return to_lua_string(m:sub(2, -2)) end)
-end
-
----`$foo` gets turned into `"foo"`. Meant for "macro" parameters, but might be useful otherwise as well
----@param chunk string
----@return string
-local function identifier_as_string(chunk)
-  return chunk:gsub("$([a-zA-Z_][a-zA-Z0-9_]*)", function(m) return '"'..m..'"' end)
-end
-
 ---@param chunk string
 ---@return string
 local function ignored_by_language_server(chunk)
@@ -39,6 +24,21 @@ end
 local function ignored_by_preprocessor(chunk)
   -- l stands for "only language server"
   return chunk:gsub("%$l(%b())", "")
+end
+
+---`$s(foo)` gets turned into `"foo"`. Meant for "macro" parameters, but might be useful otherwise as well\
+---`e` stands for `expression` or `escape`
+---@param chunk string
+---@return string
+local function expression_as_string(chunk)
+  return chunk:gsub("$e(%b())", function(m) return to_lua_string(m:sub(2, -2)) end)
+end
+
+---`$foo` gets turned into `"foo"`. Meant for "macro" parameters, but might be useful otherwise as well
+---@param chunk string
+---@return string
+local function identifier_as_string(chunk)
+  return chunk:gsub("$([a-zA-Z_][a-zA-Z0-9_]*)", function(m) return '"'..m..'"' end)
 end
 
 ---@param chunk string
@@ -159,10 +159,10 @@ end
 ---@param name? string
 ---@return function(string: _put) return string
 local function preprocess(chunk, name)
-  chunk = expression_as_string(chunk)
-  chunk = identifier_as_string(chunk)
   chunk = ignored_by_language_server(chunk)
   chunk = ignored_by_preprocessor(chunk)
+  chunk = expression_as_string(chunk)
+  chunk = identifier_as_string(chunk)
   chunk = preprocess_pragma_once(chunk)
   chunk = preprocess_lambda_expressions(chunk)
   chunk = trim_type_constructors(chunk)
