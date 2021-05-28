@@ -1,4 +1,23 @@
 
+local function to_lua_string(str)
+  local s, f = str:find("=+") ---@type integer|nil
+  local eq_chain
+  if s then
+    eq_chain = string.rep("=", (f - s) + 2)
+  else
+    eq_chain = ""
+  end
+  return "["..eq_chain.."["..str.."]"..eq_chain.."]"
+end
+
+---`$s(foo)` gets turned into `"foo"`. Meant for "macro" parameters, but might be useful otherwise as well\
+---`e` stands for `expression` or `escape`
+---@param chunk string
+---@return string
+local function expression_as_string(chunk)
+  return chunk:gsub("$e(%b())", function(m) return to_lua_string(m:sub(2, -2)) end)
+end
+
 ---`$foo` gets turned into `"foo"`. Meant for "macro" parameters, but might be useful otherwise as well
 ---@param chunk string
 ---@return string
@@ -140,6 +159,7 @@ end
 ---@param name? string
 ---@return function(string: _put) return string
 local function preprocess(chunk, name)
+  chunk = expression_as_string(chunk)
   chunk = identifier_as_string(chunk)
   chunk = ignored_by_language_server(chunk)
   chunk = ignored_by_preprocessor(chunk)
