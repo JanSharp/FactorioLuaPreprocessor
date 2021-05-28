@@ -1,4 +1,11 @@
 
+---`$foo` gets turned into `"foo"`. Meant for "macro" parameters, but might be useful otherwise as well
+---@param chunk string
+---@return string
+local function identifier_as_string(chunk)
+  return chunk:gsub("$([a-zA-Z_][a-zA-Z0-9_]*)", function(m) return '"'..m..'"' end)
+end
+
 ---@param chunk string
 ---@return string
 local function ignored_by_language_server(chunk)
@@ -133,6 +140,7 @@ end
 ---@param name? string
 ---@return function(string: _put) return string
 local function preprocess(chunk, name)
+  chunk = identifier_as_string(chunk)
   chunk = ignored_by_language_server(chunk)
   chunk = ignored_by_preprocessor(chunk)
   chunk = preprocess_pragma_once(chunk)
