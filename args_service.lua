@@ -5,7 +5,8 @@ local Path = require("path")
 ---@class Args
 ---@field project_name string
 ---@field project_id string @ same as project name but as a valid lua identifier
----@field source_extensions table<string, boolean>
+---@field source_extensions string[]
+---@field source_extension_lut table<string, boolean>
 ---@field source_dir_path Path
 ---@field target_extension string
 ---@field target_dir_path Path
@@ -76,7 +77,8 @@ local function get_args(arg)
   assert_group("target_extension")
   assert_group("target_dir")
 
-  convert_to_map("source_extensions")
+  args.source_extension_lut = args.source_extensions ---@type string[]
+  convert_to_map("source_extension_lut")
   args.ignore_dirs = args.ignore_dirs or {}
   convert_to_map("ignore_dirs")
 

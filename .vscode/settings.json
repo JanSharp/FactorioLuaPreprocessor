@@ -8,4 +8,8 @@
   "Lua.diagnostics.neededFileStatus": {
     "no-implicit-any": "Any",
   },
+  "Lua.runtime.path": [
+    "?.lua",
+    "?.luap",
+  ]
 }

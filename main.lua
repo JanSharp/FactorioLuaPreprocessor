@@ -1,22 +1,13 @@
 
 local preprocessor = require("preprocessor")
 local preprocess_in_memory = preprocessor.preprocess_in_memory
+local prep_env = preprocessor.prep_env
 local args_service = require("args_service")
 local Path = require("path")
 ---@type LFS
 local lfs = require("lfs")
 
 local args = args_service.get_args(arg)
-
--- setup preprocessor global
----@class PreprocessorGlobal
----@field args Args
----@field current_file_path Path
-local global = {
-  args = args,
-}
--- the debugger breaks using _ENV, possibly only for the main file, but still
-_G.preprocessor = global
 
 ---does the directory contain anything
 ---@param dir string
@@ -49,15 +40,15 @@ local function process_source_dir(relative_path)
           process_source_dir(relative_path / entry_path)
         end
       else
-        if args.source_extensions[source_path:extension()] then
+        if args.source_extension_lut[source_path:extension()] then
           ---@type Path
           local relative_target_path = (relative_path / (entry_path:filename()..args.target_extension))
           target_file_paths[relative_target_path:str()] = true
           local source_file = io.open(source_path:str(), "r")
           local source_code = source_file:read("a")
           source_file:close()
-          global.current_file_path = source_path
-          local target_code = preprocess_in_memory(source_code)
+          prep_env.prep.current_file_path = entry_path
+          local target_code = preprocess_in_memory(source_code, args)
           local target_path = args.target_dir_path / relative_target_path
           local write_file = true
           local target_file = io.open(target_path:str(), "r")

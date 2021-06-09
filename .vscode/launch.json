@@ -9,8 +9,8 @@
       },
       "args": [
         "--project-name", "LuaPreprocessor",
-        "--source-dir", "C:/Dev/LuaPreprocessor/mod/src",
-        "--source-extensions", ".lua",
+        "--source-dir", "C:/Dev/LuaPreprocessor/mod",
+        "--source-extensions", ".luap",
         "--target-dir", "C:/Dev/LuaPreprocessor/mod",
         "--target-extension", ".lua",
         "--auto-clean-up-target-dir",
