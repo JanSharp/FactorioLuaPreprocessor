@@ -105,7 +105,11 @@ local function parse_dollar_paren(pieces, chunk)
   ---@typelist integer, string, integer
   for term, executed, e in string.gmatch(chunk, "()$(%b())()") do
     insert(pieces, format("_put(%q)", string.sub(chunk, s, term - 1)))
-    insert(pieces, format("_put(%s or '')", executed))
+    if load("return "..executed) then
+      insert(pieces, format("_put(%s or '')", executed))
+    else
+      insert(pieces, executed:sub(2, -2))
+    end
     -- table.insert(pieces, string.format("%q..(%s or '')..",
     --   string.sub(chunk, s, term - 1), executed))
     s = e
@@ -138,7 +142,14 @@ local function parse_hash_lines(chunk, newline)
 end
 
 -- `prep` sandbox global
-local prep = {}
+local prep = {
+  Path = Path,
+  args = nil,
+  ret = nil,
+  require = nil,
+  package = nil,
+  current_file_path = nil, -- set in main.lua
+}
 
 -- sandbox `_ENV`
 local prep_env = {
